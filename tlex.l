@@ -35,7 +35,7 @@ NUM		[0-9]+
 [A-Z]				{ yylval->cval = yytext[0]; return TOKEN_ID; }
 [a-z]				{ yylval->cval = yytext[0]; return TOKEN_VAR; }
 {NUM}				{ yylval->ival = atoi(yytext); return TOKEN_NUM; }
-[,:(){}]			{ return yytext[0]; }
+[,:(){}<>=!]			{ return yytext[0]; }
 "|"|{CUP}{WS}			{ return '|'; }
 "&"|{CAP}{WS}			{ return '&'; }
 "-"|{SETMINUS}{WS}		{ return '-'; }

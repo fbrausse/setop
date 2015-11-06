@@ -92,18 +92,16 @@ expr
 	  }
 	;
 
-clause_list
-	: clause
-	| clause_list ',' clause
+formula
+	: atomic_formula
+	| infix_predicate
+	| formula '|' formula
+	| formula '&' formula
 	;
 
-clause
-	: infix_predicate
-	| '!' predicate
-	;
-
-predicate
-	: '(' infix_predicate ')'
+atomic_formula
+	: '(' formula ')'
+	| '!' atomic_formula
 	;
 
 infix_predicate
