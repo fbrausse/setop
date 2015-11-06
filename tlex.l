@@ -24,6 +24,8 @@ SETMINUS	"\\setminus"
 OPLUS		"\\oplus"
 WS		[ \r\n\t]
 
+LIT_DQ		'"([^\"]*|\\.)*"'
+LIT_SQ		"'[^']*'"
 
 NUM		[0-9]+
 
@@ -31,12 +33,15 @@ NUM		[0-9]+
 
 {WS}+				{ /* skip blanks */ }
 [A-Z]				{ yylval->cval = yytext[0]; return TOKEN_ID; }
+[a-z]				{ yylval->cval = yytext[0]; return TOKEN_VAR; }
 {NUM}				{ yylval->ival = atoi(yytext); return TOKEN_NUM; }
-[,:()]				{ return yytext[0]; }
+[,:(){}]			{ return yytext[0]; }
 "|"|{CUP}{WS}			{ return '|'; }
 "&"|{CAP}{WS}			{ return '&'; }
 "-"|{SETMINUS}{WS}		{ return '-'; }
 "^"|{OPLUS}{WS}			{ return '^'; }
+{LIT_DQ}			{ return TOKEN_LIT_DQ; }
+{LIT_SQ}			{ return TOKEN_LIT_SQ; }
 
 %%
 

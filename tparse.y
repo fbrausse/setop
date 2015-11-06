@@ -54,6 +54,9 @@ typedef void* yyscan_t;
 %token <ival> TOKEN_NUM
 
 %token TOKEN_COLONEQ
+%token TOKEN_LIT_DQ
+%token TOKEN_LIT_SQ
+%token TOKEN_VAR
 
 %type <tnode> expr
 %type <ival> field
@@ -76,6 +79,7 @@ expr
 	| expr '&' expr       { $$ = tnode_create(TNODE_INTERS, $1, $3); }
 	| expr '^' expr       { $$ = tnode_create(TNODE_SYMDIFF, $1, $3); }
 	| '(' expr ')' fields { $$ = $2; $$->fields = $4; }
+	| '{' set_spec '}' fields
 	| TOKEN_ID fields {
 		if ($1 > max_id || !($$ = tnode_create_id($1, $2))) {
 			char buf[128];
@@ -86,6 +90,49 @@ expr
 			return -1;
 		}
 	  }
+	;
+
+clause_list
+	: clause
+	| clause_list ',' clause
+	;
+
+clause
+	: infix_predicate
+	| '!' predicate
+	;
+
+predicate
+	: '(' infix_predicate ')'
+	;
+
+infix_predicate
+	: lit '<' lit
+	| lit '>' lit
+	| lit '=' lit
+	;
+
+set_spec
+	: %empty
+	| lit ':' clause_list
+	| tuple_list
+	;
+
+tuple_list
+	: lit
+	| tuple_list ',' lit
+	;
+
+lit
+	: TOKEN_LIT_SQ
+	| TOKEN_LIT_DQ
+	| TOKEN_VAR
+	| tuple
+	;
+
+tuple
+	: '(' ')'
+	| '(' tuple_list ')'
 	;
 
 fields
