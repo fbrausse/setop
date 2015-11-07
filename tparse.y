@@ -71,10 +71,10 @@ input
 	;*/
 
 expr
-	: expr '-' expr       { $$ = tnode_create(TNODE_SETMINUS, $1, $3); }
-	| expr '|' expr       { $$ = tnode_create(TNODE_CUP, $1, $3); }
-	| expr '&' expr       { $$ = tnode_create(TNODE_CAP, $1, $3); }
-	| expr '^' expr       { $$ = tnode_create(TNODE_XOR, $1, $3); }
+	: expr '-' expr       { $$ = tnode_create(TNODE_DIFF, $1, $3); }
+	| expr '|' expr       { $$ = tnode_create(TNODE_UNION, $1, $3); }
+	| expr '&' expr       { $$ = tnode_create(TNODE_INTERS, $1, $3); }
+	| expr '^' expr       { $$ = tnode_create(TNODE_SYMDIFF, $1, $3); }
 	| '(' expr ')' fields { $$ = $2; $$->fields = $4; }
 	| TOKEN_ID fields {
 		if ($1 > max_id || !($$ = tnode_create_id($1, $2))) {

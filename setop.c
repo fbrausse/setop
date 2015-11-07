@@ -181,10 +181,10 @@ static void tnode_dump(FILE *f, const struct tnode *e)
 {
 	static const char ss[] = {
 		[TNODE_ID]       = 'A',
-		[TNODE_CUP]      = '|',
-		[TNODE_CAP]      = '&',
-		[TNODE_SETMINUS] = '-',
-		[TNODE_XOR]      = '^',
+		[TNODE_UNION]    = '|',
+		[TNODE_INTERS]   = '&',
+		[TNODE_DIFF]     = '-',
+		[TNODE_SYMDIFF]  = '^',
 	};
 	if (!e)
 		return;
@@ -307,7 +307,7 @@ static struct str_array eval(const struct tnode *e, const struct str_array *a)
 #endif
 			varr_append_a(&u,a+e->id,0);
 			break;
-		case TNODE_XOR:
+		case TNODE_SYMDIFF:
 			varr_ensure_sz(&u,l.valid + r.valid,0);
 			while (nl<l.valid || nr<r.valid) {
 				int d = nl>=l.valid ? +1
@@ -319,7 +319,7 @@ static struct str_array eval(const struct tnode *e, const struct str_array *a)
 				if (d >= 0) nr++, pr++;
 			}
 			break;
-		case TNODE_CAP:
+		case TNODE_INTERS:
 			varr_ensure_sz(&u,MIN(l.valid,r.valid),0);
 			while (nl<l.valid && nr<r.valid) {
 				int d = str_xcmp(pl, e->ch[0]->fields, pr, e->ch[1]->fields);
@@ -329,7 +329,7 @@ static struct str_array eval(const struct tnode *e, const struct str_array *a)
 				if (d >= 0) nr++, pr++;
 			}
 			break;
-		case TNODE_CUP:
+		case TNODE_UNION:
 			varr_ensure_sz(&u,l.valid + r.valid,0);
 			while (nl<l.valid || nr<r.valid) {
 				int d = nl>=l.valid ? +1
@@ -340,7 +340,7 @@ static struct str_array eval(const struct tnode *e, const struct str_array *a)
 				if (d >= 0) nr++, pr++;
 			}
 			break;
-		case TNODE_SETMINUS:
+		case TNODE_DIFF:
 			varr_ensure_sz(&u,l.valid,0);
 			while (nl<l.valid) {
 				int d = nr>=r.valid ? -1

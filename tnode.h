@@ -13,7 +13,7 @@
 typedef unsigned fieldmap_t;
 
 enum tnode_type {
-	TNODE_ID, TNODE_CUP, TNODE_CAP, TNODE_SETMINUS, TNODE_XOR,
+	TNODE_ID, TNODE_UNION, TNODE_INTERS, TNODE_DIFF, TNODE_SYMDIFF,
 };
 
 struct tnode {
