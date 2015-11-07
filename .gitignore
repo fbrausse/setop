@@ -1,0 +1,4 @@
+setop
+*.o
+tparse.[ch]
+tlex.[ch]
