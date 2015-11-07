@@ -11,6 +11,30 @@
 #include <stdio.h>
 #include "tnode.h"
 #include "tparse.h"
+
+static char * dequote(const char *s)
+{
+	size_t len = strlen(s);
+	if (len < 2 || s[0] != '"' || s[len-1] != '"')
+		return NULL;
+	char *r = malloc(len-1);
+	size_t p = 0, q = 1;
+	int escaped = 0;
+	while (q < len-1) {
+		char c = s[q++];
+		if (escaped) {
+			r[p++] = c;
+			escaped = 0;
+		} else if (c == '\\') {
+			escaped = 1;
+		} else {
+			r[p++] = c;
+		}
+	}
+	r[p] = '\0';
+	return r;
+}
+
 %}
 
 %option outfile="tlex.c" header-file="tlex.h"
@@ -40,8 +64,8 @@ NUM		[0-9]+
 "&"|{CAP}{WS}			{ return '&'; }
 "-"|{SETMINUS}{WS}		{ return '-'; }
 "^"|{OPLUS}{WS}			{ return '^'; }
-{LIT_DQ}			{ return TOKEN_LIT_DQ; }
-{LIT_SQ}			{ return TOKEN_LIT_SQ; }
+{LIT_DQ}			{ yylval->sval = dequote(yytext); return TOKEN_LIT; }
+{LIT_SQ}			{ yylval->sval = strndup(yytext+1,strlen(yytext+1)-1); return TOKEN_LIT; }
 
 %%
 

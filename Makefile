@@ -1,8 +1,8 @@
-CFLAGS  = -std=c99 -Wall -Wno-unused
+CFLAGS  = -std=c99 -Wall -Wno-unused -D_POSIX_C_SOURCE=200809L
 CFLAGS += -O2
 #CFLAGS += -ggdb
 
-OBJS    = setop.o tlex.o tparse.o
+OBJS    = setop.o tnode.o tlex.o tparse.o
 
 all: setop
 
