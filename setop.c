@@ -49,10 +49,10 @@ FIELDS is a comma-separated list of integers or colon-separated integer pairs\n\
 indicating a range. Fields are 0-based and delimited by SEP. Additionally the\n\
 following binary operators are supported, in order of decreasing precedence:\n\
 \n\
-  ^  \\oplus     symmetric set difference\n\
-  &  \\cap       set intersection\n\
-  |  \\cup       set union\n\
-  -  \\setminus  set difference\n\
+  ^              symmetric set difference\n\
+  &              set intersection\n\
+  |              set union\n\
+  -              set difference\n\
 \n\
 Literal sets are supported via the following syntax:\n\
   { \"esc\\\"ape\\\"d\", 'un-esc\"ape\"d', ('a','tuple') }\n\

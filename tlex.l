@@ -42,10 +42,6 @@ static char * dequote(const char *s)
 %option reentrant noyywrap never-interactive nounistd
 %option bison-bridge
 
-CUP		"\\cup"
-CAP		"\\cap"
-SETMINUS	"\\setminus"
-OPLUS		"\\oplus"
 WS		[ \r\n\t]
 
 LIT_DQ		\"([^\\\"]*|\\.)*\"
@@ -62,11 +58,7 @@ NUM		[0-9]+
 "<="				{ return TOKEN_LEQ; }
 ">="				{ return TOKEN_GEQ; }
 "!="|"<>"			{ return TOKEN_NEQ; }
-[,:(){}<>=!]			{ return yytext[0]; }
-"|"|{CUP}{WS}			{ return '|'; }
-"&"|{CAP}{WS}			{ return '&'; }
-"-"|{SETMINUS}{WS}		{ return '-'; }
-"^"|{OPLUS}{WS}			{ return '^'; }
+[,:(){}<>=!|&^-]		{ return yytext[0]; }
 {LIT_DQ}			{ yylval->sval = dequote(yytext); return TOKEN_LIT; }
 {LIT_SQ}			{ yylval->sval = strndup(yytext+1,strlen(yytext+1)-1); return TOKEN_LIT; }
 
