@@ -1,44 +1,94 @@
 
 #include "tnode.h"
 
-static void fnode_tuple_flatten(struct fnode_arr *t)
-{
-	struct fnode **n = t->v;
-	struct fnode_arr a;
-	for (size_t i=0; i<t->valid; i++, n++) {
-		switch ((*n)->type) {
-		case FNODE_VAR:
-		case FNODE_LIT:
-			break;
-		case FNODE_TUPLE:
-			a = (*n)->ch->arr;
-			if (a.valid >= 1) {
-				*n = a.v[--a.valid];
-				varr_insert(t,i,a.v,a.valid,1);
-			} else {
-				memmove(t->v+i, t->v+i+1, sizeof(*t->v) * (--t->valid - i));
+struct var {
+	char id;
+	fieldmap_t fields;
+};
+
+VARR_DECL(field_arr,struct field);
+VARR_DECL(var_arr,struct var);
+
+static void fnode_prep(
+	struct array *s, struct field_arr *f, const struct fnode *g,
+	struct var_arr *vars
+) {
+	struct field ff = { s->valid, 0 };
+	const struct fnode_arr *a;
+	struct fnode **h;
+	struct var *v;
+	fieldmap_t fld_mask;
+
+	switch (g->type) {
+	case FNODE_TUPLE:
+		a = &g->ch[0].arr;
+		if (!a->valid)
+			varr_append(f,&ff,1,1);
+		else
+			varr_forall(h,a)
+				fnode_prep(s,f,*h,vars);
+		return;
+	case FNODE_LIT:
+		ff.len = strlen(g->ch[0].lit);
+		array_append(s,g->ch[0].lit,ff.len,1);
+		varr_append(f,&ff,1,1);
+		return;
+	case FNODE_VAR:
+		fld_mask = (fieldmap_t)1 << f->valid;
+		varr_append(f,&ff,1,1);
+		varr_forall(v,vars)
+			if (v->id == g->ch[0].var) {
+				v->fields |= fld_mask;
+				return;
 			}
-			varr_fini(&a);
-			i--;
-			n--;
-			break;
-		default:
-			DIE(1,"only VAR, LIT and TUPLE allowed inside a TUPLE\n");
-		}
+		varr_append(vars,(&(struct var){ g->ch[0].var, fld_mask }),1,1);
+		return;
+	default:
+		DIE(1,"only VAR, LIT and TUPLE allowed inside a TUPLE, got %d\n",g->type);
 	}
 }
 
-static void fnode_eval(struct str_array *r, const struct fnode_arr *t, const struct fnode *f)
+static int fnode_assign_vars(
+	struct array *c, struct field_arr *f, const struct var_arr *v,
+	const struct fnode *formula
+) {
+	return 0;
+}
+
+static void fnode_strs(struct str_array *r, struct fnode *g, const struct fnode *formula)
 {
-	
+	struct field_arr f = VARR_INIT, f0;
+	struct array c = ARRAY_INIT, c0;
+	struct var_arr v = VARR_INIT;
+
+	fnode_prep(&c, &f, g, &v);
+
+	while (1) {
+		struct field_arr f0 = VARR_INIT;
+		struct array c0 = ARRAY_INIT;
+		array_append_a(&c0,&c,0);
+		varr_append_a(&f0,&f,0);
+		if (1 /*fnode_assign_vars(&c0,&f0,&v,formula)*/) {
+			varr_append(r,(&(struct str){c0.c, f0.v, f0.valid}),1,1);
+			break;
+		} else {
+			varr_fini(&f0);
+			array_fini(&c0);
+			break;
+		}
+	}
+	varr_fini(&f);
+	array_fini(&c);
+	varr_fini(&v);
 }
 
 int src_create_set(
 	struct src_array *s, struct fnode_arr list, const struct fnode *formula
 ) {
 	struct str_array r = VARR_INIT;
-	fnode_tuple_flatten(&list);
-	fnode_eval(&r, &list, formula);
+	struct fnode **f;
+	varr_forall(f,&list)
+		fnode_strs(&r, *f, formula);
 	int ret = s->valid;
 	varr_append(s,&r,1,1);
 	return ret;

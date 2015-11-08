@@ -72,12 +72,13 @@ typedef void* yyscan_t;
 %type <ival> fields
 %type <ival> set_spec
 
+/*
 %type <fnode> formula
 %type <fnode> atomic_formula
 %type <fnode> infix_predicate
+*/
 %type <fnode> lit 
 
-%type <fnode_arr> tuple
 %type <fnode_arr> tuple_list
 %type <fnode_arr> tuple_list_opt
 
@@ -113,10 +114,10 @@ expr
 	;
 
 set_spec
-	: tuple_list ':' formula { $$ = src_create_set(sets, $1, $3); fnode_tree_free($3); }
-	| tuple_list_opt         { $$ = src_create_set(sets, $1, &fnode_true); }
+	: tuple_list_opt         { $$ = src_create_set(sets, $1, &fnode_true); }
+//	| tuple_list ':' formula { $$ = src_create_set(sets, $1, $3); fnode_tree_free($3); }
 	;
-
+/*
 formula
 	: atomic_formula
 	| infix_predicate
@@ -136,7 +137,7 @@ infix_predicate
 	| lit '>' lit            { $$ = fnode_create2(FNODE_GT, $1, $3); }
 	| lit '=' lit            { $$ = fnode_create2(FNODE_EQ, $1, $3); }
 	;
-
+*/
 tuple_list_opt
 	:                        { $$ = (struct fnode_arr)VARR_INIT; }
 	| tuple_list
@@ -149,17 +150,8 @@ tuple_list
 
 lit
 	: TOKEN_LIT              { $$ = fnode_create_lit($1); }
-	| TOKEN_VAR              { $$ = fnode_create_var($1); }
-	| tuple                  { $$ = fnode_create_tuple($1); }
-	;
-
-tuple
-	: '(' tuple_list_opt ')'
-	{
-		$$ = (struct fnode_arr)VARR_INIT;
-		varr_append(&$$,&$2,1,1);
-		varr_fini(&$2);
-	}
+//	| TOKEN_VAR              { $$ = fnode_create_var($1); }
+	| '(' tuple_list_opt ')' { $$ = fnode_create_tuple($2); }
 	;
 
 fields

@@ -53,7 +53,11 @@ following binary operators are supported, in order of decreasing precedence:\n\
   &  \\cap       set intersection\n\
   |  \\cup       set union\n\
   -  \\setminus  set difference\n\
+\n\
+Literal sets are supported via the following syntax:\n\
+  { \"esc\\\"ape\\\"d\", 'un-esc\"ape\"d', ('a','tuple') }\n\
 "
+//  { x, (y,z), '#' : (A(x) | B2(x)) & C(y) & {'abc','def'}(z) & !0 }\n
 
 struct iopts {
 	char *isep;
@@ -219,7 +223,7 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	if (!n || !expr)
+	if (!expr)
 		DIE(1,USAGE,argv[0]);
 	if (n > MAX_IDS)
 		DIE(1,"error: max. %d inputs supported\n",MAX_IDS);
