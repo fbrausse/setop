@@ -1,4 +1,6 @@
 setop
 *.o
 tparse.[ch]
+tparse.dot
+tparse.output
 tlex.[ch]
