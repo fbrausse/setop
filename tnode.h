@@ -152,10 +152,9 @@ struct str_array tnode_eval(const struct tnode *e, const struct str_array *a);
 static inline fieldmap_t tnode_field(int from, int to)
 {
 	fieldmap_t mask  = ~(fieldmap_t)0;
-	fieldmap_t fto   = ~(mask << (to+1));
+	fieldmap_t fto   = ~(to == MAX_FIELD ? (fieldmap_t)0 : mask << (to+1));
 	fieldmap_t ffrom = ~(mask << from);
 	return fto & ~ffrom;
-	return ~(~(fieldmap_t)0 << (to+1)) & ~(~(fieldmap_t)0 << from);
 }
 
 #endif
