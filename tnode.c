@@ -87,8 +87,11 @@ int src_create_set(
 ) {
 	struct str_array r = VARR_INIT;
 	struct fnode **f;
-	varr_forall(f,&list)
+	varr_forall(f,&list) {
 		fnode_strs(&r, *f, formula);
+		fnode_tree_free(*f);
+	}
+	varr_fini(&list);
 	int ret = s->valid;
 	varr_append(s,&r,1,1);
 	return ret;

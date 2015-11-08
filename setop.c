@@ -227,12 +227,13 @@ int main(int argc, char **argv)
 	}
 	varr_fini(&u);
 
-	for (unsigned i=0; i<n; i++) {
-		varr_forall(s,inputs.v+i) {
+	struct str_array *t;
+	varr_forall(t,&inputs) {
+		varr_forall(s,t) {
 			free(s->s);
 			free(s->f);
 		}
-		varr_fini(inputs.v+i);
+		varr_fini(t);
 	}
 	varr_fini(&inputs);
 
