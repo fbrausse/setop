@@ -30,6 +30,7 @@
 Options [default]:\n\
   -d ISEP       use ISEP as input field delimiter(s) [" SETOP_DEF_ISEP_DESC "]\n\
   -D OSEP       use OSEP as output field separator [" SETOP_DEF_OSEP_DESC "]\n\
+  -e            don't dismiss empty lines [dismiss]\n\
   -h            display this help message\n\
   -t            disable trimming blanks left and right of key [enable]\n\
   -v            print parse tree of EXPR to stderr\n\
@@ -54,9 +55,14 @@ following binary operators are supported, in order of decreasing precedence:\n\
   -  \\setminus  set difference\n\
 "
 
+struct iopts {
+	char *isep;
+	unsigned trim : 1;
+	unsigned allow_empty : 1;
+};
+
 static int entry_extract(
-	struct str *e, const char *line, size_t len,
-	const char *field_sep, int trim
+	struct str *e, const char *line, size_t len, const struct iopts *o
 ) {
 	VARR_DECL_ANON(struct field) f = VARR_INIT;
 	e->s = strndup(line, len);
@@ -64,11 +70,11 @@ static int entry_extract(
 	unsigned field = 0;
 	unsigned i = 0;
 	while (i <= len) {
-		if (trim)
+		if (o->trim)
 			i += strspn(e->s + i, BLANK);
-		unsigned fld_len = strcspn(e->s + i, field_sep);
+		unsigned fld_len = strcspn(e->s + i, o->isep);
 		struct field g = { i, fld_len };
-		if (trim)
+		if (o->trim)
 			while (g.len && strchr(BLANK, e->s[i+g.len-1]))
 				g.len--;
 		varr_append(&f,&g,1,1);
@@ -77,7 +83,7 @@ static int entry_extract(
 			(int)f.valid-1, (int)g.len, e->s + g.from);
 #endif
 		i += fld_len;
-		unsigned sep_len = strchr(field_sep, e->s[i]) ? 1 : 0; // strspn(e->s + i, field_sep);
+		unsigned sep_len = strchr(o->isep, e->s[i]) ? 1 : 0; // strspn(e->s + i, field_sep);
 		i += sep_len;
 		if (!sep_len)
 			break;
@@ -85,7 +91,7 @@ static int entry_extract(
 	e->f = f.v;
 	e->n = f.valid;
 
-	if (e->n)
+	if (o->allow_empty || e->n)
 		return 1;
 	free(e->s);
 	free(e->f);
@@ -93,7 +99,7 @@ static int entry_extract(
 }
 
 static void read_input(
-	char *fname, char desc, const char *field_sep, int trim,
+	char *fname, char desc, const struct iopts *o,
 	struct str_array *r, struct str_array **stdin_data
 ) {
 	int is_stdin = !strcmp(fname, "-");
@@ -122,7 +128,7 @@ static void read_input(
 		if (line[len-1] == '\n')
 			line[--len] = '\0';
 		struct str e;
-		if (entry_extract(&e, line, len, field_sep, trim))
+		if (entry_extract(&e, line, len, o))
 			varr_append(r,&e,1,1);
 	}
 	ret = -errno;
@@ -186,16 +192,20 @@ int main(int argc, char **argv)
 	int   n;
 	int   verbosity = 0;
 	char *expr = NULL;
-	char *isep = SETOP_DEF_ISEP;
-	int   trim = 1;
 	char *osep = SETOP_DEF_OSEP;
+	struct iopts iopts = {
+		SETOP_DEF_ISEP,
+		1,
+		0,
+	};
 	for (n=-1; optind < argc; n++) {
-		while ((opt = getopt(argc, argv, ":d:D:htv")) != -1)
+		while ((opt = getopt(argc, argv, ":d:D:ehtv")) != -1)
 			switch (opt) {
-			case 'd': isep = optarg; break;
+			case 'd': iopts.isep = optarg; break;
 			case 'D': osep = optarg; break;
+			case 'e': iopts.allow_empty = 1; break;
 			case 'h': DIE(0,USAGE "\n" HELP,argv[0]);
-			case 't': trim = 0; break;
+			case 't': iopts.trim = 0; break;
 			case 'v': verbosity++; break;
 			case '?': DIE(1,"error: unknown option '-%c'\n",optopt);
 			case ':': DIE(1,"error: option '-%c' requires an argument\n",optopt);
@@ -205,7 +215,7 @@ int main(int argc, char **argv)
 				expr = argv[optind++];
 			else {
 				varr_append(&inputs,(&(struct str_array)VARR_INIT),1,1);
-				read_input(argv[optind++], MIN_ID+n, isep, trim, inputs.v+n, &stdin_data);
+				read_input(argv[optind++], MIN_ID+n, &iopts, inputs.v+n, &stdin_data);
 			}
 		}
 	}
