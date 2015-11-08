@@ -163,34 +163,13 @@ static struct tnode * tnode_parse(char *s, char max_id, struct src_array *sets)
 	return r;
 }
 
-static void tnode_dump(FILE *f, const struct tnode *e)
-{
-	static const char ss[] = {
-		[TNODE_ID]       = 'A',
-		[TNODE_UNION]    = '|',
-		[TNODE_INTERS]   = '&',
-		[TNODE_DIFF]     = '-',
-		[TNODE_SYMDIFF]  = '^',
-	};
-	if (!e)
-		return;
-	if (e->type == TNODE_ID)
-		fprintf(f, "%c", MIN_ID + e->id);
-	else {
-		fprintf(f, "%c(", ss[e->type]);
-		tnode_dump(f, e->ch[0]);
-		fprintf(f, ",");
-		tnode_dump(f, e->ch[1]);
-		fprintf(f, ")");
-	}
-	fprintf(f, "[0x%08x]", e->fields);
-}
-
 int main(int argc, char **argv)
 {
 	struct src_array inputs = VARR_INIT;
 	struct str_array *stdin_data = NULL;
-
+#if YYDEBUG
+	yydebug = 1;
+#endif
 	char *endptr;
 	int   opt;
 	int   n;

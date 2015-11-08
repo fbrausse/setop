@@ -60,7 +60,9 @@ struct fnode {
 };
 
 void tnode_tree_free(struct tnode *t);
+void tnode_dump(FILE *f, const struct tnode *e);
 void fnode_tree_free(struct fnode *r);
+void fnode_tree_dump(FILE *f, const struct fnode *r);
 
 static inline struct fnode * fnode_create(enum fnode_type type, unsigned nch)
 {

@@ -94,6 +94,36 @@ int src_create_set(
 	return ret;
 }
 
+void fnode_tree_dump(FILE *f, const struct fnode *r)
+{
+	struct fnode **s;
+	fprintf(f, "(%c ", "&|<>=!vtlci"[r->type]);
+	switch (r->type) {
+	case FNODE_AND:
+	case FNODE_OR:
+	case FNODE_LT:
+	case FNODE_GT:
+	case FNODE_EQ:
+		fnode_tree_dump(f, r->ch[0].fnode);
+		fprintf(f, ",");
+		fnode_tree_dump(f, r->ch[1].fnode);
+		break;
+	case FNODE_NEG: fnode_tree_dump(f, r->ch[0].fnode); break;
+	case FNODE_VAR: fprintf(f, "%c", r->ch[0].var); break;
+	case FNODE_TUPLE:
+		fprintf(f, "[");
+		varr_forall(s,&r->ch[0].arr) {
+			fnode_tree_dump(f, *s);
+			fprintf(f, ",");
+		}
+		fprintf(f, "]");
+		break;
+	case FNODE_LIT: fprintf(f, "'%s'", r->ch[0].lit); break;
+	case FNODE_CONST: fprintf(f, "%d", r->ch[0].cnst); break;
+	case FNODE_INCL: tnode_dump(f, r->ch[0].tnode); fprintf(f, "(%c)", r->ch[1].var); break;
+	}
+	fprintf(f, ")");
+}
 
 void fnode_tree_free(struct fnode *r)
 {
@@ -134,6 +164,29 @@ void tnode_tree_free(struct tnode *t)
 	tnode_tree_free(t->ch[0]);
 	tnode_tree_free(t->ch[1]);
 	free(t);
+}
+
+void tnode_dump(FILE *f, const struct tnode *e)
+{
+	static const char ss[] = {
+		[TNODE_ID]       = 'A',
+		[TNODE_UNION]    = '|',
+		[TNODE_INTERS]   = '&',
+		[TNODE_DIFF]     = '-',
+		[TNODE_SYMDIFF]  = '^',
+	};
+	if (!e)
+		return;
+	if (e->type == TNODE_ID)
+		fprintf(f, "%c", MIN_ID + e->id);
+	else {
+		fprintf(f, "%c(", ss[e->type]);
+		tnode_dump(f, e->ch[0]);
+		fprintf(f, ",");
+		tnode_dump(f, e->ch[1]);
+		fprintf(f, ")");
+	}
+	fprintf(f, "[0x%08x]", e->fields);
 }
 
 

@@ -60,6 +60,9 @@ typedef void* yyscan_t;
 %token <ival> TOKEN_NUM
 
 %token TOKEN_COLONEQ
+%token TOKEN_LEQ
+%token TOKEN_GEQ
+%token TOKEN_NEQ
 
 %token <sval> TOKEN_LIT
 
@@ -77,7 +80,7 @@ typedef void* yyscan_t;
 %type <fnode> atomic_formula
 %type <fnode> infix_predicate
 */
-%type <fnode> lit 
+%type <fnode> lit
 
 %type <fnode_arr> tuple_list
 %type <fnode_arr> tuple_list_opt
@@ -134,12 +137,15 @@ atomic_formula
 
 infix_predicate
 	: lit '<' lit            { $$ = fnode_create2(FNODE_LT, $1, $3); }
+	| lit TOKEN_LEQ lit      { $$ = fnode_create1(FNODE_NEG, fnode_create2(FNODE_GT, $1, $3)); }
 	| lit '>' lit            { $$ = fnode_create2(FNODE_GT, $1, $3); }
+	| lit TOKEN_GEQ lit      { $$ = fnode_create1(FNODE_NEG, fnode_create2(FNODE_LT, $1, $3)); }
 	| lit '=' lit            { $$ = fnode_create2(FNODE_EQ, $1, $3); }
+	| lit TOKEN_NEQ lit      { $$ = fnode_create1(FNODE_NEG, fnode_create2(FNODE_EQ, $1, $3)); }
 	;
 */
 tuple_list_opt
-	:                        { $$ = (struct fnode_arr)VARR_INIT; }
+	: /* empty */            { $$ = (struct fnode_arr)VARR_INIT; }
 	| tuple_list
 	;
 
@@ -152,16 +158,25 @@ lit
 	: TOKEN_LIT              { $$ = fnode_create_lit($1); }
 //	| TOKEN_VAR              { $$ = fnode_create_var($1); }
 	| '(' tuple_list_opt ')' { $$ = fnode_create_tuple($2); }
+//	| TOKEN_NUM              { $$ = fnode_create0($1); }
+/* exposes rr-conflict:
+ *	lit -> '(' tuple_list_opt ')'
+ * vs.
+ *	atomic_formula -> '(' formula ')'
+ * on last token TOKEN_NUM and look-ahead ')'
+ *
+ * E.g. both (w|sh)ould work: '{():(0)}' and '{():(0)<0}'
+ */
 	;
 
 fields
-	:                          { $$ = ~(fieldmap_t)0; }
+	: /* empty */              { $$ = ~(fieldmap_t)0; }
 	| field_list               { $$ = $1; }
 	;
 
 field_list
 	: field                    { $$ = $1; }
-	| field ',' field_list     { $$ = $1 | $3; }
+	| field_list ',' field     { $$ = $1 | $3; }
 	;
 
 field
