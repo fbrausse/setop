@@ -8,7 +8,7 @@
 #include "tparse.h"
 #include "tlex.h"
 
-#define BLANK	" \t\r\n"
+#define BLANK	" \f\t\r\n"
 
 #ifndef SETOP_DEF_ISEP
 # define SETOP_DEF_ISEP		BLANK
